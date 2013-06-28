@@ -1,0 +1,10 @@
+<analysis>
+	<class name ="BarChartDisplay">
+		<method name = "&lt;init&gt;" desc = "(LRefereeList;)V" numinstr = "48">
+			48
+		</method>
+		<method name = "initGui" desc = "(LRefereeList;)V" numinstr = "35">
+			35
+		</method>
+	</class>
+</analysis>

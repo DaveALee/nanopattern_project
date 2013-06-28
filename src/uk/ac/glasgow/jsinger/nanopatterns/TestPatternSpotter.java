@@ -99,8 +99,7 @@ public class TestPatternSpotter {
 
 	public static void scanDirectory(File directory) {
 		for (String entry : directory.list()) {
-			
-			String path = directory.getPath() + "\\" + entry;			
+			String path = directory.getPath() + "\\" + entry;
 			File thing = new File(path);
 			if (thing.isDirectory()) {
 				scanDirectory(thing);
@@ -131,10 +130,8 @@ public class TestPatternSpotter {
 	/** ANALYSERS **/
 
 	public static void analyseClassFile(String path) {
-		System.out.println(path);
 		try {
 			FileInputStream f = new FileInputStream(path);
-
 			analyseInputStream(f);
 		} catch (IOException e) {
 			System.out.println("File was not found: " + path);
