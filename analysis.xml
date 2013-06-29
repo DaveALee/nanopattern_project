@@ -1,10 +1,45 @@
 <analysis>
-	<class name ="BarChartDisplay">
-		<method name = "&lt;init&gt;" desc = "(LRefereeList;)V" numinstr = "48">
-			48
+	<class name ="Foo">
+		<method name = "&lt;init&gt;" desc = "()V" numinstr = "3">
+			1 1 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 1 1 
 		</method>
-		<method name = "initGui" desc = "(LRefereeList;)V" numinstr = "35">
-			35
+		<method name = "f" desc = "(I)I" numinstr = "3">
+			0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 1 
+		</method>
+		<method name = "g" desc = "()I" numinstr = "7">
+			1 0 1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 1 0 0 0 0 0 0 0 0 0 
+		</method>
+		<method name = "h" desc = "()V" numinstr = "4">
+			1 1 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 1 
+		</method>
+		<method name = "h" desc = "(I)V" numinstr = "1">
+			0 1 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+		</method>
+		<method name = "j" desc = "()V" numinstr = "16">
+			1 1 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 0 0 0 1 0 
+		</method>
+		<method name = "k" desc = "()V" numinstr = "7">
+			1 1 0 0 0 1 0 1 0 0 0 0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 1 0 
+		</method>
+		<method name = "l" desc = "()V" numinstr = "4">
+			1 1 0 0 1 0 1 0 0 0 0 0 0 1 0 0 0 1 1 0 0 0 0 0 0 0 0 0 
+		</method>
+		<method name = "looper" desc = "()V" numinstr = "35">
+			1 1 0 0 0 1 1 0 1 1 1 0 0 0 1 0 0 1 1 0 0 0 0 0 0 0 1 0 
+		</method>
+	</class>
+	<class name ="testerClass">
+		<method name = "&lt;init&gt;" desc = "()V" numinstr = "3">
+			1 1 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 1 1 
+		</method>
+		<method name = "buildArray" desc = "()V" numinstr = "21">
+			1 1 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 1 1 1 0 1 0 0 0 0 0 0 
+		</method>
+		<method name = "fib" desc = "(I)I" numinstr = "19">
+			0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 
+		</method>
+		<method name = "calculate" desc = "(IILjava/lang/String;)I" numinstr = "4">
+			0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 
 		</method>
 	</class>
 </analysis>

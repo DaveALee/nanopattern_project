@@ -6,7 +6,6 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +14,17 @@ import java.util.TreeSet;
 
 public class PatternGUI extends JFrame implements ActionListener 
 {
+
+	private final int HEATMAP_MODE = 0;
+	private final int TEXT_DISPLAY_MODE = 1;
+
+	private final int PACKAGE_LEVEL_ANALYSIS = 0;
+	private final int CLASS_LEVEL_ANALYSIS = 1;
+	private final int METHOD_LEVEL_ANALYSIS = 2;	
+
+	private int analysisLevel = 1;
+
+	private int displayMode =0;
 
 	/**Enclosing JFame	 */
 	private JFrame topLevel;
@@ -28,9 +38,8 @@ public class PatternGUI extends JFrame implements ActionListener
 	/**The patternDetector */
 	private PatternSpotterForGUI spotter;
 
-	/** JButtons for user input */
+	/** JButton for user input */
 	private JButton openFile;
-	private JButton makeRocketsGoNow;
 
 	/** Menu Components */
 	private JMenuBar menu;
@@ -41,11 +50,23 @@ public class PatternGUI extends JFrame implements ActionListener
 	private JMenuItem help;
 	private JMenuItem exit;
 
+	/**JRadioButtons to allow switching between display modes */
+	private JRadioButton heatMapMode;
+	private JRadioButton textMode;
+
+	/** JRadioButtons to allow the analysis to be run at alternative levels
+	 * ie package, class and method
+	 */
+	private JRadioButton packageAnalysis;
+	private JRadioButton classAnalysis;
+	private JRadioButton methodAnalysis;
+
+
 	/** Allows class file to be selected */
 	private JFileChooser fileChooser;
 
 	/** The files to be analysed **/
-	private TreeSet<String> fileSet;
+	private ArrayList<String> fileList;
 
 	/** Panel to hold the files to be analysed */
 	private JPanel filePanel;
@@ -71,7 +92,7 @@ public class PatternGUI extends JFrame implements ActionListener
 		spotter = new PatternSpotterForGUI();
 
 		//set containing the files to be analysed
-		fileSet = new TreeSet<String>();	
+		fileList = new ArrayList<String>();	
 
 		initDisplay();
 
@@ -86,17 +107,96 @@ public class PatternGUI extends JFrame implements ActionListener
 	private void initDisplay(){
 
 		topLevel = new JFrame();
-		topLevel.setSize(1150,400);
+		topLevel.setSize(750,600);
 		topLevel.setTitle("Nanopattern Detector Tool");
 		topLevel.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
 		userInput = new JPanel(new BorderLayout());
 		JPanel buttonsPanel = new JPanel();
 
+
+		/////////////////// Display Mode //////////////////////
+		ButtonGroup modeSelection = new ButtonGroup();
+		heatMapMode = new JRadioButton("Heat Map");
+
+		heatMapMode.addActionListener (new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				displayMode = HEATMAP_MODE;	
+
+				packageAnalysis.setVisible(true);
+				classAnalysis.setVisible(true);
+				methodAnalysis.setVisible(true);
+
+				redrawDisplay();
+			}});
+
+		heatMapMode.setSelected(true);
+
+		textMode = new JRadioButton("Text Display");
+
+		textMode.addActionListener (new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				displayMode = TEXT_DISPLAY_MODE;	
+
+				packageAnalysis.setVisible(false);
+				classAnalysis.setVisible(false);
+				methodAnalysis.setVisible(false);
+
+
+				redrawDisplay();
+			}});
+
+
+		modeSelection.add(heatMapMode);
+		modeSelection.add(textMode);
+
+		buttonsPanel.add(heatMapMode);
+		buttonsPanel.add(textMode);
+
 		heatMapPanel = new JPanel();
 
+
+		////////////////// Analysis Level ////////////////
+
+
+
+		ButtonGroup analysisLevelSelect = new ButtonGroup();
+		packageAnalysis = new JRadioButton("Package");
+		packageAnalysis.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){			
+				analysisLevel = PACKAGE_LEVEL_ANALYSIS;
+				redrawDisplay();
+			}});
+
+		classAnalysis = new JRadioButton("Class");	
+		classAnalysis.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){			
+				analysisLevel = CLASS_LEVEL_ANALYSIS;
+				redrawDisplay();
+			}});
+
+		methodAnalysis = new JRadioButton("Method");
+		methodAnalysis.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){			
+				analysisLevel = METHOD_LEVEL_ANALYSIS;
+				redrawDisplay();
+			}});
+
+		analysisLevelSelect.add(packageAnalysis);
+		analysisLevelSelect.add(classAnalysis);
+		analysisLevelSelect.add(methodAnalysis);
+
+		classAnalysis.setSelected(true);			
+
+		buttonsPanel.add(packageAnalysis);
+		buttonsPanel.add(classAnalysis);
+		buttonsPanel.add(methodAnalysis);	
+
+
+		//////////////// Tabbed Pane for Text Results //////////
+
 		//set up tabs to hold the results
-		//tabs = new JTabbedPane();
+		tabs = new JTabbedPane();
 
 
 		//////////////// Buttons /////////////////
@@ -104,11 +204,7 @@ public class PatternGUI extends JFrame implements ActionListener
 		openFile = new JButton ("Add File");
 		openFile.addActionListener(this);
 
-		//makeRocketsGoNow = new JButton("Analyse");
-		//makeRocketsGoNow.addActionListener(this);
-
 		buttonsPanel.add(openFile);
-		//buttonsPanel.add(makeRocketsGoNow);
 
 		userInput.add(buttonsPanel, BorderLayout.NORTH);
 
@@ -122,8 +218,6 @@ public class PatternGUI extends JFrame implements ActionListener
 		////////////////// add components to frame ///////////////////
 
 		topLevel.add(userInput, BorderLayout.NORTH);
-		//topLevel.add(scrollPane, BorderLayout.CENTER);
-
 		//setup menu and add to the frame
 		setupMenu();
 
@@ -154,17 +248,12 @@ public class PatternGUI extends JFrame implements ActionListener
 		exit = new JMenuItem ("Exit");
 		exit.addActionListener(this);
 		fileMenu.add(exit);
-
-
 		menu.add(fileMenu);		
 
-
 		helpMenu = new JMenu("Help");
-
 		help = new JMenuItem ("NanoPatterns");
 		help.addActionListener(this);
 		helpMenu.add(help);
-
 		menu.add(helpMenu);	
 	}
 
@@ -229,7 +318,7 @@ public class PatternGUI extends JFrame implements ActionListener
 				{
 
 					//add this file to the fileSet
-					fileSet.add(""+  fileChooser.getSelectedFile());					
+					fileList.add(""+  fileChooser.getSelectedFile());					
 
 				}
 				else
@@ -240,50 +329,28 @@ public class PatternGUI extends JFrame implements ActionListener
 				//show the files to be analysed
 				displayFilesToAnalyse();
 
-
-				/////////////////// auto analyse ///////////////
-
-
+				//analyse the selected files and update the display
 				redrawDisplay();
 
 			}
 		}
-
-		/*
-			//analyse button
-			else if (event.getSource() == makeRocketsGoNow)
-			{
-				//check to see if there is a file to be analysed
-				if (fileSet.isEmpty()){
-					JOptionPane.showMessageDialog(topLevel, "Please select a file to be analysed.",
-							"Error", JOptionPane.ERROR_MESSAGE);
-				}
-				//analyse the file(s)
-				else{
-					//convert the fileSet to an array which is compatible with the detector tool
-					String[] args = fileSet.toArray(new String[0]);
-
-					//use the PatternSpotter to analyse the file(s) and detect patterns
-					ArrayList<ArrayList<String[]>> results = spotter.detect(args);
-
-					//printResults(results);
-
-					makeHeatMap(results);
-
-				}
-			}
-
-		 */
 		//reset menu item
 		else if (event.getSource() == reset)
 		{
 
 			tabs.setVisible(false);
+			heatMapPanel.setVisible(false);
+
 			filePanel.removeAll();
-			fileSet.clear();
+			fileList.clear();
 
 			filePanel.revalidate();
 			validate();
+		}
+
+		else if (event.getSource() == saveResults)
+		{
+			printXML();
 		}
 
 		//exit menu item
@@ -303,26 +370,43 @@ public class PatternGUI extends JFrame implements ActionListener
 		}
 	}
 
+
+
 	private void redrawDisplay()
 	{
 		//convert the fileSet to an array which is compatible with the detector tool
-		String[] args = fileSet.toArray(new String[0]);
+		String[] args = fileList.toArray(new String[0]);
 
-		//check to see if there is a file to be analysed
-		if (fileSet.isEmpty()){
-			JOptionPane.showMessageDialog(topLevel, "Please select a file to be analysed.",
-					"Error", JOptionPane.ERROR_MESSAGE);
-		}
-		else{
-		
-		//use the PatternSpotter to analyse the file(s) and detect patterns
-		ArrayList<ArrayList<String[]>> results = spotter.detect(args);
+		//check to see if there is a file to be analysed before analysing
+		if (!fileList.isEmpty()){
 
-		//printResults(results);
+			//use the PatternSpotter to analyse the file(s) and detect patterns
+			ArrayList<ArrayList<String[]>> results = spotter.detect(args);			
 
-		topLevel.remove(heatMapPanel);
 
-		makeHeatMap(results);
+			if(displayMode == HEATMAP_MODE)
+			{		
+
+
+				results = formatAnalysisLevel(results);
+
+				tabs.setVisible(false);
+
+				topLevel.remove(heatMapPanel);
+
+				makeHeatMap(results);
+				repaint();
+			}
+
+			else if(displayMode == TEXT_DISPLAY_MODE)
+			{
+
+				topLevel.remove(heatMapPanel);
+
+				printResults(results);
+
+				repaint();		
+			}
 		}
 	}
 
@@ -347,127 +431,180 @@ public class PatternGUI extends JFrame implements ActionListener
 
 
 
+	//////////////////////////////////////////////////////////////////
+	//						View Selected Files			            //
+	//////////////////////////////////////////////////////////////////
+
 	/**
-	 *  Produces the output of the analysis in the form of a tabbed interface
-	 *  with a tab for every class analysed.
-	 * 
-	 * @param results arrayList containing a the classes analysed
+	 * Displays the selected classes to the user and allows them to be deselected
 	 */
-	private void printResults(ArrayList<ArrayList<String[]>> results) 
+	private void displayFilesToAnalyse()
 	{
-		tabs.removeAll();
-		tabs.setVisible(true);		
+		//reset the panel to avoid duplicate display
+		filePanel.removeAll();
 
-		//for each class analysed
-		for(int i = 0; i < results.size();i++)
+		//iterator to enable the set of file paths to be output
+		Iterator<String> it = fileList.iterator();
+
+		//the number rows relating to the number of files to be analysed
+		int row=0;		
+
+		//use the iterator to traverse the set
+		while (it.hasNext())
 		{
-			//get the list of classes
-			ArrayList<String[]> fileResults = results.get(i);
+			final String curr = it.next();
 
-			// make a new textArea to be used as a tab
-			JTextArea panel = new JTextArea();
+			//create a checkbox for every selected file			
+			final JCheckBox file = new JCheckBox(curr);
 
-			//fixed width font to ease alignment
-			panel.setFont(new Font("Courier", Font.BOLD, 14));
-
-			//layout text area
-			Border resultsBorder = BorderFactory.createLineBorder(Color.BLACK);
-			panel.setBorder(BorderFactory.createCompoundBorder(
-					resultsBorder, BorderFactory.createEmptyBorder(10,10,10,10)));
-			JScrollPane scrollPane = new JScrollPane(panel); 
-			panel.setEditable(false);
-
-			//get the list of methods for current class
-			for(int j=0; j < fileResults.size(); j++)
+			//anonymous inner class to handle action events
+			//associated with the selection of which files should be 
+			//analysed
+			file.addActionListener(new ActionListener()
 			{
+				public void actionPerformed(ActionEvent e)
+				{
+					//add to the set if selected
+					if (file.isSelected())
+					{	
+						fileList.add(curr);
+						redrawDisplay();
+					}
+					//remove from the set if deselected
+					else{fileList.remove(curr);
+					redrawDisplay();}							
+				}});			
 
-				//the results for one method
-				String [] method = fileResults.get(j);
+			//initally set the file to be selected
+			file.setSelected(true);
 
-				//add class name
-				if (j == 0)
-				{		
-					//tooltip (method[0]) shows the package
-					tabs.addTab(method[1], null, scrollPane, method[0] );	
+			//increase the size of the grid
+			//allows the file paths to be displayed in multiple rows
+			grid.setRows(row+1);
 
-				}
-				//get and display results as a string
-				//panel.append(getMethodInfo(method));	
-			}
-			//set to top of results
-			panel.setCaretPosition(0);
-		}
-		//add the tabs
-		topLevel.add(tabs);
-		//allow dynamic adding
-		topLevel.revalidate();
+
+			//add the checkbox and file desc to the display
+			filePanel.add(file, row,0);		
+			row++;
+		}		
+		//allow the display to be dynamically updated
+		filePanel.revalidate();
 		validate();
 	}
 
 
-	private void makeHeatMap(ArrayList<ArrayList<String[]>> listOfClasses)
+
+	//////////////////////////////////////////////////////////
+	//				Heat Map Display                        //
+	//////////////////////////////////////////////////////////
+
+	private void makeHeatMap(ArrayList<ArrayList<String[]>> listToAnalyse)
 	{
 
-		double[][] heatMapInput = new double[listOfClasses.size()][listOfPatterns.size()];
+		if(analysisLevel == PACKAGE_LEVEL_ANALYSIS || analysisLevel == CLASS_LEVEL_ANALYSIS)
+		{
 
+			double[][] heatMapInput = new double[listToAnalyse.size()][listOfPatterns.size()];
 
-		//make an array for the y axis containing the pattern names
-		Object[] patterns = new Object[listOfPatterns.size()];
-		patterns = listOfPatterns.toArray();
+			//make an array for the y axis containing the pattern names
+			Object[]patterns = listOfPatterns.toArray();
 
-		Object [] classes = getClassNames(listOfClasses);
+			Object [] classes = getClassNames(listToAnalyse);
 
+			//for each of the classes analysed...
+			for(int i = 0; i < listToAnalyse.size(); i++)
+			{ 
+				//find the number of methods in the class
+				int numMethodsInClass = listToAnalyse.get(i).size();
 
-		//for each of the classes analysed...
-		for(int i = 0; i < listOfClasses.size(); i++)
-		{ 
+				int[] numPatternsInClass = new int[listOfPatterns.size()];
 
-			//find the number of methods in the class
-			int numMethodsInClass = listOfClasses.get(i).size();
+				//for each method in the class, decide whether it contains each nanopattern or not
+				for (int j = 0; j < numMethodsInClass; j++)
+				{			
+					//the full results of the analysis of one method
+					String[] methodInfo = listToAnalyse.get(i).get(j);
 
-			int[] numPatternsInClass = new int[listOfPatterns.size()];
+					String [] binaryResults = methodInfo[5].split(" +");
 
-			//for each method in the class, decide whether it contains each nanopattern or not
-			for (int j = 0; j < numMethodsInClass; j++)
-			{			
-				//the full results of the analysis of one method
-				String[] methodInfo = listOfClasses.get(i).get(j);
-
-				String [] binaryResults = methodInfo[5].split(" +");
-
-				//for each binary digit of the method results
-				//increase frequency of pattern in class if present
-				for(int k = 0; k < binaryResults.length; k++)
-				{
-					//will be a 1 or 0 representing a pattern's presence in the method
-					String pattern = binaryResults[k];
-
-					if (pattern.equals("1"))
+					//for each binary digit of the method results
+					//increase frequency of pattern in class if present
+					for(int k = 0; k < binaryResults.length; k++)
 					{
-						//increase the number of patterns found
-						numPatternsInClass[k]++;
+						//will be a 1 or 0 representing a pattern's presence in the method
+						String pattern = binaryResults[k];
+
+						if (pattern.equals("1"))
+						{
+							//increase the number of patterns found
+							numPatternsInClass[k]++;
+						}
 					}
+
+					//one class' results 
+					heatMapInput[i] = calcPercentPatterns(numPatternsInClass, numMethodsInClass);
 				}
-
-
-				//one class' results 
-				heatMapInput[i] = calcPercentPatterns(numPatternsInClass, numMethodsInClass);
 			}
 
 
+			HeatMap map = new HeatMap(heatMapInput, patterns, classes);
+
+			heatMapPanel = map.displayHeatMap();		
+
+
+
+
+			topLevel.add(heatMapPanel, BorderLayout.CENTER);
+
+			topLevel.revalidate();
+			validate();
 		}
+		//pass the methods
+		else
+		{
+
+			double[][] heatMapInput = new double[listToAnalyse.get(0).size()][listOfPatterns.size()];
+
+			//make an array for the y axis containing the pattern names
+			Object[]patterns = listOfPatterns.toArray();
 
 
-		HeatMap map = new HeatMap(heatMapInput, patterns, classes);
 
-		heatMapPanel = map.displayHeatMap();
+			ArrayList<String[]> allMethods = listToAnalyse.get(0);
+
+			Object[] methods = new Object[allMethods.size()];
+
+			//split for each method
+			for(int i = 0; i < allMethods.size(); i++)
+			{
+				//a method's results
+				String[] methodInfo = allMethods.get(i);
+
+				methods[i] = methodInfo[2];
+
+				String [] binaryResults = methodInfo[5].split(" +");
+
+				double[] methodResults = new double[binaryResults.length];
+
+				for(int j = 0; j < binaryResults.length; j++)
+				{
+					methodResults[j] = Double.parseDouble(binaryResults[j]);
+				}
 
 
-		topLevel.add(heatMapPanel, BorderLayout.CENTER);
+				heatMapInput[i] = methodResults;
+			}
 
-		topLevel.revalidate();
-		validate();
+			HeatMap map = new HeatMap(heatMapInput, patterns, methods);
 
+			heatMapPanel = map.displayHeatMap();
+
+
+			topLevel.add(heatMapPanel, BorderLayout.CENTER);			
+
+			topLevel.revalidate();
+			validate();
+		}
 	}
 
 
@@ -478,9 +615,16 @@ public class PatternGUI extends JFrame implements ActionListener
 		Object[] classNames = new Object[listOfClasses.size()];
 		for(int i = 0; i < classNames.length; i++ )
 		{
-			String[] aMethod = listOfClasses.get(i).get(0);
+			String[] aMethod = listOfClasses.get(i).get(0);	
 
-			classNames[i] = aMethod[1];
+			if(analysisLevel == PACKAGE_LEVEL_ANALYSIS)
+			{
+				classNames[i] = aMethod[0];
+			}
+			else
+			{
+				classNames[i] = aMethod[1];
+			}
 		}
 		return classNames;
 	}
@@ -500,23 +644,173 @@ public class PatternGUI extends JFrame implements ActionListener
 		}
 
 		return percentPatterns;
+	}
 
 
+	private ArrayList<ArrayList<String[]>> formatAnalysisLevel(ArrayList<ArrayList<String[]>> results)
+	{
+		if(analysisLevel == PACKAGE_LEVEL_ANALYSIS) 
+		{
+			//data structure to hold the list of methods belonging to all the classes in a package
+			ArrayList<ArrayList<String[]>> packages = new ArrayList<ArrayList<String[]>>();
+
+
+			//examine the results for each class
+			for(int i = 0; i < results.size(); i ++)
+			{
+				//the class to be assigned a package
+				ArrayList<String[]> nextClass = results.get(i); 
+
+				//the first method in a class will give its packagename
+				String[] method = nextClass.get(0);
+				//packageName is the package the current class belongs to
+				String packageName = method[0];	
+
+				//if no classes have been assigned packages yet,
+				//the first class is always in a new package
+				if(packages.size() == 0)
+				{
+					packages.add(nextClass);
+				}
+				else
+				{
+					//we have already identified package(s)
+					//check if the package this class belongs to has already been seen
+					boolean found = false;
+
+					for(int j = 0; j< packages.size(); j++)
+					{
+						//get the name of the next package in the list of seen packages
+						String[] aMethod = packages.get(j).get(0);
+						String thisPackageName = aMethod[0];
+
+						//package already exists in the list
+						if (thisPackageName.equals(packageName))
+						{
+							//add the classes results to the element containing results
+							//from the same package
+							packages.get(j).addAll(nextClass);
+							found = true;
+							break;
+						}
+
+					}
+					if(!found)
+					{
+						//make a new entry for the package
+						packages.add(nextClass);	
+					}
+				}
+			}	
+			return packages;
+		}
+		else if(analysisLevel == CLASS_LEVEL_ANALYSIS)
+		{
+			return results;
+		}
+		//method level analysis
+		else
+		{
+			ArrayList<String[]> methods = new ArrayList<String[]>();
+
+			//remove class information
+			for(int i = 0; i < results.size(); i++)
+			{
+				//get the class
+				ArrayList<String[]> currentClass = results.get(i);
+
+				//add all the methods in the class to the higher level list
+				//thereby removing class information
+				methods.addAll(currentClass);			
+
+			}
+
+			ArrayList<ArrayList<String[]>> methodLevelResults = new ArrayList<ArrayList<String[]>>();
+
+			methodLevelResults.add(methods);
+
+			results = methodLevelResults;
+
+			return results;
+
+		}
 
 	}
+
+
+	////////////////////////////////////////////////////////////////
+	//						Tabbed Display						  //
+	////////////////////////////////////////////////////////////////
+
+	/**
+	 *  Produces the output of the analysis in the form of a tabbed interface
+	 *  with a tab for every class analysed.
+	 * 
+	 * @param results arrayList containing a the classes analysed
+	 */
+	private void printResults(ArrayList<ArrayList<String[]>> results) 
+	{
+		tabs.removeAll();
+		tabs.setVisible(true);		
+
+		//for each class analysed
+		for(int i = 0; i < results.size();i++)
+		{
+			//get the list of classes
+			ArrayList<String[]> fileResults = results.get(i);
+
+			// make a new textArea to be used as a tab
+			JTextArea textPanel = new JTextArea();
+
+			//fixed width font to ease alignment
+			textPanel.setFont(new Font("Courier", Font.BOLD, 14));
+
+			//layout text area
+			Border resultsBorder = BorderFactory.createLineBorder(Color.BLACK);
+			textPanel.setBorder(BorderFactory.createCompoundBorder(
+					resultsBorder, BorderFactory.createEmptyBorder(10,10,10,10)));
+			JScrollPane scrollPane = new JScrollPane(textPanel); 
+			textPanel.setEditable(false);
+
+			//get the list of methods for current class
+			for(int j=0; j < fileResults.size(); j++)
+			{
+
+				//the results for one method
+				String [] method = fileResults.get(j);
+
+				//add class name
+				if (j == 0)
+				{		
+					//tooltip (method[0]) shows the package
+					tabs.addTab(method[1], null, scrollPane, method[0] );	
+
+				}
+				//get and display results as a string
+				textPanel.append(getMethodInfo(method));	
+			}
+			//set to top of results
+			textPanel.setCaretPosition(0);
+		}
+		//add the tabs
+		topLevel.add(tabs);
+		//allow dynamic adding
+		topLevel.revalidate();
+		validate();
+	}
+
 
 
 	/**
 	 * controls how the results of the analysis are displayed
 	 * @param methodResults an array containing the results of the analysis on a single method
 	 */
-
-	/*
 	public String getMethodInfo(String[] methodResults){
 
 		StringBuilder sb = new StringBuilder();
 		String results = "";
-		//methodResults will be in the following format:
+
+		//String[] methodResults will be in the following format:
 		//[0] = package
 		//[1] = class
 		//[2] = method name
@@ -562,130 +856,90 @@ public class PatternGUI extends JFrame implements ActionListener
 		return results;
 	}
 
-	 */
 
 
-
-
-
-
-	/**
-	 * Displays the selected classes to the user and allows them to be deselected
-	 */
-	private void displayFilesToAnalyse()
-	{
-		//reset the panel to avoid duplicate display
-		filePanel.removeAll();
-
-		//iterator to enable the set of file paths to be output
-		Iterator<String> it = fileSet.iterator();
-
-		//the number rows relating to the number of files to be analysed
-		int row=0;		
-
-		//use the iterator to traverse the set
-		while (it.hasNext())
-		{
-			final String curr = it.next();
-
-			//create a checkbox for every selected file			
-			final JCheckBox file = new JCheckBox(curr);
-
-			//anonymous inner class to handle action events
-			//associated with the selection of which files should be 
-			//analysed
-			file.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e){
-					//add to the set if selected
-					if (file.isSelected()){	
-						fileSet.add(curr);
-						redrawDisplay();
-
-					}
-					//remove from the set if deselected
-					else{fileSet.remove(curr);
-					redrawDisplay();}							
-				}});			
-
-			//initally set the file to be selected
-			file.setSelected(true);
-
-			//increase the size of the grid
-			//allows the file paths to be displayed in multiple rows
-			grid.setRows(row+1);
-
-
-			//add the checkbox and file desc to the display
-			filePanel.add(file, row,0);		
-			row++;
-		}		
-		//allow the display to be dynamically updated
-		filePanel.revalidate();
-		validate();
-	}
-
-
-	///////////////////////// XML ///////////////////////////////
+	///////////////////////////////////////////////////////////////
+	//						XML Output							 //
+	///////////////////////////////////////////////////////////////
 
 	/**
 	 * Takes the results of the analysis, adds xml tags and outputs the results to a file
 	 * @param list the results of the analysis
 	 */
-	private void printxml (ArrayList<ArrayList<String[]>> list)
+	private void printXML ()
 	{
-		StringBuilder sb = new StringBuilder();
+		//convert the fileSet to an array which is compatible with the detector tool
+		String[] args = fileList.toArray(new String[0]);
 
-
-		sb.append("<analysis>");
-		for (int i = 0; i < list.size(); i++)
+		//check to see if there is a file to be analysed
+		if (fileList.isEmpty())
 		{
-			ArrayList<String[]>thisClass = list.get(i);
+			JOptionPane.showMessageDialog(topLevel, "At least one file must be selected\n" +
+					"in order to export as XML.",
+					"Error", JOptionPane.ERROR_MESSAGE);
+		}	
+		else
+		{
+			//run the detection
+			ArrayList<ArrayList<String[]>> list = spotter.detect(args);
 
-			//format the classname
-			String[] firstMethod = thisClass.get(0);
-			String className = escapeChars(firstMethod[1]);
+			//string builder to hold the xml String as it is created
+			StringBuilder sb = new StringBuilder();
 
 
-			sb.append("\n\t<class name =\""+className+"\">");
-			//format xml for all methods in the class
-			for(int j = 0; j< thisClass.size(); j++)
+			sb.append("<analysis>");
+			for (int i = 0; i < list.size(); i++)
 			{
-				String[] thisMethod = thisClass.get(j);
-				//print the method name description and number of instructions
-				sb.append("\n\t\t<method name = \""+ escapeChars(thisMethod[2]) + "\" desc = \""
-						+thisMethod[3] + "\" numinstr = \"" + thisMethod[4] + "\">");
+				ArrayList<String[]>thisClass = list.get(i);
+
+				//format the classname
+				String[] firstMethod = thisClass.get(0);
+				String className = escapeChars(firstMethod[1]);
 
 
-				//print out the binary string of nanopatterns
-				//TODO alter so arrayList is used and can divide into types of pattern??
-				sb.append("\n\t\t\t"+thisMethod[4]);
+				sb.append("\n\t<class name =\""+className+"\">");
+				//format xml for all methods in the class
+				for(int j = 0; j< thisClass.size(); j++)
+				{
+					String[] thisMethod = thisClass.get(j);
+					//print the method name description and number of instructions
+					sb.append("\n\t\t<method name = \""+ escapeChars(thisMethod[2]) + "\" desc = \""
+							+thisMethod[3] + "\" numinstr = \"" + thisMethod[4] + "\">");
 
-				sb.append("\n\t\t</method>");	
+					//print out the binary string of nanopatterns
+					//TODO alter so arrayList is used and can divide into types of pattern??
+					sb.append("\n\t\t\t"+thisMethod[5]);
+
+					sb.append("\n\t\t</method>");	
+				}
+
+				sb.append("\n\t</class>");
 			}
+			sb.append("\n</analysis>");
 
-			sb.append("\n\t</class>");
-		}
-		sb.append("\n</analysis>");
+			String output = sb.toString();
 
-		String output = sb.toString();
+			//write the xml to a file
+			FileWriter fw = null;
+			try{
+				try 
+				{
+					fw = new FileWriter("analysis.xml");
+					fw.write(output);	
 
-		//write the xml to a file
-		FileWriter fw = null;
-		try{
-			try 
-			{
-				fw = new FileWriter("analysis.xml");
-				fw.write(output);			
-			} 
-			finally
-			{
-				if(fw != null)
-					fw.close();
+					JOptionPane.showMessageDialog(topLevel, "analysis.xml created successfully",
+							"Success", JOptionPane.INFORMATION_MESSAGE);
+				} 
+				finally
+				{
+					if(fw != null)
+						fw.close();
+				}
 			}
-		}
-		catch (IOException e) {
+			catch (IOException e) {
 
-			e.printStackTrace();
+				e.printStackTrace();
+			}
 		}
 	}
 

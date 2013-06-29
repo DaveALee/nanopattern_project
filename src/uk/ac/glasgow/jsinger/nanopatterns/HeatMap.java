@@ -43,7 +43,7 @@ public class HeatMap extends JFrame{
 		map.setTitle("Patterns Heat Map");
 
 		//set the size of the cells
-		map.setCellSize(new Dimension(35,25));
+		map.setCellSize(new Dimension(20,20));
 
 		map.setAxisValuesFont(new Font ("Courier", Font.BOLD, 14));
 
@@ -62,6 +62,7 @@ public class HeatMap extends JFrame{
 		//chart is displayed as an ImageIcon of a JLabel
 		JLabel chartImage = new JLabel(new ImageIcon(chart));
 		panel.add(chartImage);		
+		
 
 		
 		return panel;

@@ -84,7 +84,6 @@ public class PatternSpotterForGUI {
 				mode = ANALYSE_JAR_FILE;
 				scanJar(arg);
 
-				allClasses.add(output);
 				continue;
 			}
 
