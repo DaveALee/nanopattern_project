@@ -20,17 +20,31 @@ public class PatternGUI extends JFrame implements ActionListener
 
 	private final int PACKAGE_LEVEL_ANALYSIS = 0;
 	private final int CLASS_LEVEL_ANALYSIS = 1;
-	private final int METHOD_LEVEL_ANALYSIS = 2;	
+	private final int METHOD_LEVEL_ANALYSIS = 2;
 
-	private int analysisLevel = 1;
+	/** the order of elements in the array of results 
+	 * for each method
+	 */
+	private final int PACKAGE_NAME = 0; 
+	private final int CLASS_NAME = 1;
+	private final int METHOD_NAME = 2;
+	private final int METHOD_DESC = 3;
+	private final int NUM_INSTRUCTIONS = 4;
+	private final int BINARY_RESULTS_STRING = 5;
 
-	private int displayMode =0;
+
+
+	private int analysisLevel;
+
+	private int displayMode;
 
 	/**Enclosing JFame	 */
 	private JFrame topLevel;
 
 	/** Panel for buttons */
 	private JPanel userInput;
+	
+	private JLabel init;
 
 	/** List of all the patterns we know about (order is important) */
 	private ArrayList<String> listOfPatterns;
@@ -72,7 +86,7 @@ public class PatternGUI extends JFrame implements ActionListener
 	private JPanel filePanel;
 
 	/**Panel to hold the heatmap results */
-	private JPanel heatMapPanel;
+	private JScrollPane heatMapPanel;
 
 	/** Allows the files to be displayed in a single column with multiple rows*/
 	private GridLayout grid;
@@ -94,6 +108,10 @@ public class PatternGUI extends JFrame implements ActionListener
 		//set containing the files to be analysed
 		fileList = new ArrayList<String>();	
 
+		analysisLevel = CLASS_LEVEL_ANALYSIS;
+
+		displayMode =  HEATMAP_MODE;
+
 		initDisplay();
 
 		createPatternList();
@@ -107,7 +125,7 @@ public class PatternGUI extends JFrame implements ActionListener
 	private void initDisplay(){
 
 		topLevel = new JFrame();
-		topLevel.setSize(750,600);
+		topLevel.setSize(850,600);
 		topLevel.setTitle("Nanopattern Detector Tool");
 		topLevel.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
@@ -123,9 +141,9 @@ public class PatternGUI extends JFrame implements ActionListener
 			public void actionPerformed(ActionEvent e) {
 				displayMode = HEATMAP_MODE;	
 
-				packageAnalysis.setVisible(true);
-				classAnalysis.setVisible(true);
-				methodAnalysis.setVisible(true);
+				packageAnalysis.setEnabled(true);
+				classAnalysis.setEnabled(true);
+				methodAnalysis.setEnabled(true);
 
 				redrawDisplay();
 			}});
@@ -137,12 +155,9 @@ public class PatternGUI extends JFrame implements ActionListener
 		textMode.addActionListener (new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				displayMode = TEXT_DISPLAY_MODE;	
-
-				packageAnalysis.setVisible(false);
-				classAnalysis.setVisible(false);
-				methodAnalysis.setVisible(false);
-
-
+				classAnalysis.setEnabled(false);
+				packageAnalysis.setEnabled(false);
+				methodAnalysis.setEnabled(false);
 				redrawDisplay();
 			}});
 
@@ -150,10 +165,18 @@ public class PatternGUI extends JFrame implements ActionListener
 		modeSelection.add(heatMapMode);
 		modeSelection.add(textMode);
 
-		buttonsPanel.add(heatMapMode);
-		buttonsPanel.add(textMode);
+		JPanel mode = new JPanel();
 
-		heatMapPanel = new JPanel();
+
+
+		mode.add(heatMapMode);
+		mode.add(textMode);
+
+		mode.setBorder(BorderFactory.createTitledBorder("Display Mode:"));
+
+		buttonsPanel.add(mode);
+
+		heatMapPanel = new JScrollPane();
 
 
 		////////////////// Analysis Level ////////////////
@@ -188,9 +211,16 @@ public class PatternGUI extends JFrame implements ActionListener
 
 		classAnalysis.setSelected(true);			
 
-		buttonsPanel.add(packageAnalysis);
-		buttonsPanel.add(classAnalysis);
-		buttonsPanel.add(methodAnalysis);	
+		JPanel analysis = new JPanel();
+
+		analysis.add(packageAnalysis);
+		analysis.add(classAnalysis);
+		analysis.add(methodAnalysis);	
+
+		analysis.setBorder(BorderFactory.createTitledBorder("Analysis Level:"));
+
+
+		buttonsPanel.add(analysis);
 
 
 		//////////////// Tabbed Pane for Text Results //////////
@@ -204,6 +234,7 @@ public class PatternGUI extends JFrame implements ActionListener
 		openFile = new JButton ("Add File");
 		openFile.addActionListener(this);
 
+
 		buttonsPanel.add(openFile);
 
 		userInput.add(buttonsPanel, BorderLayout.NORTH);
@@ -212,6 +243,11 @@ public class PatternGUI extends JFrame implements ActionListener
 		///////////// Area to display class paths ////////////////////
 		grid = new GridLayout(1,1);
 		filePanel = new JPanel(grid);
+
+		filePanel.setBorder(BorderFactory.createTitledBorder("Files to Include:"));
+
+		init = new JLabel("      (No Files Currently Selected)");
+		filePanel.add(init);
 		userInput.add(filePanel);
 
 
@@ -342,6 +378,9 @@ public class PatternGUI extends JFrame implements ActionListener
 			heatMapPanel.setVisible(false);
 
 			filePanel.removeAll();
+
+			filePanel.add(init);
+			
 			fileList.clear();
 
 			filePanel.revalidate();
@@ -500,32 +539,39 @@ public class PatternGUI extends JFrame implements ActionListener
 
 	private void makeHeatMap(ArrayList<ArrayList<String[]>> listToAnalyse)
 	{
+		//make an array for the x axis containing the pattern names
+		//is the same regardless of the analysis level
+		Object[]patterns = listOfPatterns.toArray();
+
+		//make an array to hold the labels for the y axis. 
+		Object[] yAxisItems;
+
+		double[][] heatMapInput;
 
 		if(analysisLevel == PACKAGE_LEVEL_ANALYSIS || analysisLevel == CLASS_LEVEL_ANALYSIS)
 		{
+			//prepare the double[][] required as input to the heat map
+			heatMapInput = new double[listToAnalyse.size()][listOfPatterns.size()];
 
-			double[][] heatMapInput = new double[listToAnalyse.size()][listOfPatterns.size()];
+			//make the array to hold the y axis labels
+			yAxisItems = getYAxisNames(listToAnalyse);
 
-			//make an array for the y axis containing the pattern names
-			Object[]patterns = listOfPatterns.toArray();
 
-			Object [] classes = getClassNames(listToAnalyse);
-
-			//for each of the classes analysed...
 			for(int i = 0; i < listToAnalyse.size(); i++)
 			{ 
-				//find the number of methods in the class
-				int numMethodsInClass = listToAnalyse.get(i).size();
+				//find the number of methods in the class to allow calculation of average
+				int numMethodsInAnalysis = listToAnalyse.get(i).size();
 
-				int[] numPatternsInClass = new int[listOfPatterns.size()];
+				// holds the number of each type of pattern in the target package/class
+				int[] numPatternsInAnalysis = new int[listOfPatterns.size()];
 
-				//for each method in the class, decide whether it contains each nanopattern or not
-				for (int j = 0; j < numMethodsInClass; j++)
+				//for each method in the class/package, decide whether it contains each nanopattern or not
+				for (int j = 0; j < numMethodsInAnalysis; j++)
 				{			
 					//the full results of the analysis of one method
 					String[] methodInfo = listToAnalyse.get(i).get(j);
 
-					String [] binaryResults = methodInfo[5].split(" +");
+					String [] binaryResults = methodInfo[BINARY_RESULTS_STRING].split(" +");
 
 					//for each binary digit of the method results
 					//increase frequency of pattern in class if present
@@ -537,42 +583,28 @@ public class PatternGUI extends JFrame implements ActionListener
 						if (pattern.equals("1"))
 						{
 							//increase the number of patterns found
-							numPatternsInClass[k]++;
+							numPatternsInAnalysis[k]++;
 						}
 					}
 
 					//one class' results 
-					heatMapInput[i] = calcPercentPatterns(numPatternsInClass, numMethodsInClass);
+					heatMapInput[i] = calcPercentPatterns(numPatternsInAnalysis, numMethodsInAnalysis);
 				}
 			}
 
-
-			HeatMap map = new HeatMap(heatMapInput, patterns, classes);
-
-			heatMapPanel = map.displayHeatMap();		
-
-
-
-
-			topLevel.add(heatMapPanel, BorderLayout.CENTER);
-
-			topLevel.revalidate();
-			validate();
 		}
 		//pass the methods
 		else
 		{
 
-			double[][] heatMapInput = new double[listToAnalyse.get(0).size()][listOfPatterns.size()];
+			heatMapInput = new double[listToAnalyse.get(0).size()][listOfPatterns.size()];
 
-			//make an array for the y axis containing the pattern names
-			Object[]patterns = listOfPatterns.toArray();
+			yAxisItems = getYAxisNames(listToAnalyse);
 
-
-
+			//the methods are all held in the first element of the analysis data structure 
 			ArrayList<String[]> allMethods = listToAnalyse.get(0);
 
-			Object[] methods = new Object[allMethods.size()];
+			yAxisItems = new Object[allMethods.size()];
 
 			//split for each method
 			for(int i = 0; i < allMethods.size(); i++)
@@ -580,9 +612,9 @@ public class PatternGUI extends JFrame implements ActionListener
 				//a method's results
 				String[] methodInfo = allMethods.get(i);
 
-				methods[i] = methodInfo[2];
+				yAxisItems[i] = methodInfo[METHOD_NAME];
 
-				String [] binaryResults = methodInfo[5].split(" +");
+				String [] binaryResults = methodInfo[BINARY_RESULTS_STRING].split(" +");
 
 				double[] methodResults = new double[binaryResults.length];
 
@@ -590,43 +622,44 @@ public class PatternGUI extends JFrame implements ActionListener
 				{
 					methodResults[j] = Double.parseDouble(binaryResults[j]);
 				}
-
-
 				heatMapInput[i] = methodResults;
 			}
-
-			HeatMap map = new HeatMap(heatMapInput, patterns, methods);
-
-			heatMapPanel = map.displayHeatMap();
-
-
-			topLevel.add(heatMapPanel, BorderLayout.CENTER);			
-
-			topLevel.revalidate();
-			validate();
 		}
+
+		HeatMap map = new HeatMap(heatMapInput, patterns, yAxisItems);
+
+		heatMapPanel = map.displayHeatMap();
+
+		topLevel.add(heatMapPanel, BorderLayout.CENTER);			
+
+		topLevel.revalidate();
+		validate();
 	}
 
 
 
-
-	private Object[] getClassNames(ArrayList<ArrayList<String[]>> listOfClasses)
+	private Object[] getYAxisNames(ArrayList<ArrayList<String[]>> analysisList)
 	{
-		Object[] classNames = new Object[listOfClasses.size()];
-		for(int i = 0; i < classNames.length; i++ )
+		Object[] yAxis = new Object[analysisList.size()];
+
+		for(int i = 0; i < yAxis.length; i++ )
 		{
-			String[] aMethod = listOfClasses.get(i).get(0);	
+			String[] aYAxisElement = analysisList.get(i).get(0);	
 
 			if(analysisLevel == PACKAGE_LEVEL_ANALYSIS)
 			{
-				classNames[i] = aMethod[0];
+				yAxis[i] = aYAxisElement[PACKAGE_NAME];
 			}
-			else
+			else if (analysisLevel == CLASS_LEVEL_ANALYSIS)
 			{
-				classNames[i] = aMethod[1];
+				yAxis[i] = aYAxisElement[CLASS_NAME];
+			}
+			else if (analysisLevel == METHOD_LEVEL_ANALYSIS)
+			{
+
 			}
 		}
-		return classNames;
+		return yAxis;
 	}
 
 
@@ -646,14 +679,22 @@ public class PatternGUI extends JFrame implements ActionListener
 		return percentPatterns;
 	}
 
-
+	/**
+	 * This method transforms the results of the analysis to the format required
+	 * by the analysis level that is selected. An ArrayList<ArrayList<String[]>> is
+	 * passed in, the elements are changed according to the requested analysis level
+	 * and an ArrayList<ArrayList<String[]>> is returned to be displayed.
+	 * 
+	 * @param results The initial results of the analysis
+	 * @return results formatted correctly for the analysis level selected
+	 */
 	private ArrayList<ArrayList<String[]>> formatAnalysisLevel(ArrayList<ArrayList<String[]>> results)
 	{
+		//Decide which level of analysis is required and respond appropriately
 		if(analysisLevel == PACKAGE_LEVEL_ANALYSIS) 
 		{
 			//data structure to hold the list of methods belonging to all the classes in a package
 			ArrayList<ArrayList<String[]>> packages = new ArrayList<ArrayList<String[]>>();
-
 
 			//examine the results for each class
 			for(int i = 0; i < results.size(); i ++)
@@ -664,7 +705,7 @@ public class PatternGUI extends JFrame implements ActionListener
 				//the first method in a class will give its packagename
 				String[] method = nextClass.get(0);
 				//packageName is the package the current class belongs to
-				String packageName = method[0];	
+				String packageName = method[PACKAGE_NAME];	
 
 				//if no classes have been assigned packages yet,
 				//the first class is always in a new package
@@ -693,8 +734,8 @@ public class PatternGUI extends JFrame implements ActionListener
 							found = true;
 							break;
 						}
-
 					}
+					//package has not been previously seen
 					if(!found)
 					{
 						//make a new entry for the package
@@ -702,15 +743,15 @@ public class PatternGUI extends JFrame implements ActionListener
 					}
 				}
 			}	
+			//return ArrayList<ArrayList<String[]>> where each element in the top
+			//level ArrayList is a package.
 			return packages;
 		}
-		else if(analysisLevel == CLASS_LEVEL_ANALYSIS)
+		//method level analysis.
+		else if (analysisLevel == METHOD_LEVEL_ANALYSIS)
 		{
-			return results;
-		}
-		//method level analysis
-		else
-		{
+			//List to hold all the methods. Behaves like all the methods
+			//belong to a single class
 			ArrayList<String[]> methods = new ArrayList<String[]>();
 
 			//remove class information
@@ -721,20 +762,26 @@ public class PatternGUI extends JFrame implements ActionListener
 
 				//add all the methods in the class to the higher level list
 				//thereby removing class information
-				methods.addAll(currentClass);			
-
+				methods.addAll(currentClass);	
 			}
 
+			// methodLevelResults will hold an arrayList with only one entry containing all the methods
+			//from all the classes
 			ArrayList<ArrayList<String[]>> methodLevelResults = new ArrayList<ArrayList<String[]>>();
 
+			//add the ArrayList containing results from the methods to the higher level ArrayList
+			//so the results are in the form needed by the display
 			methodLevelResults.add(methods);
 
-			results = methodLevelResults;
-
-			return results;
+			return methodLevelResults;
 
 		}
-
+		// mode will be CLASS_LEVEL_ANALYSIS. Results are already in the correct format,
+		//so just return them as they are
+		else  
+		{
+			return results;
+		}
 	}
 
 
@@ -783,7 +830,7 @@ public class PatternGUI extends JFrame implements ActionListener
 				if (j == 0)
 				{		
 					//tooltip (method[0]) shows the package
-					tabs.addTab(method[1], null, scrollPane, method[0] );	
+					tabs.addTab(method[CLASS_NAME], null, scrollPane, method[PACKAGE_NAME] );	
 
 				}
 				//get and display results as a string
@@ -819,15 +866,15 @@ public class PatternGUI extends JFrame implements ActionListener
 		//[5] = binary String of patterns present
 
 		//displays the method name
-		sb.append(String.format("Method Name: %-15s\n", methodResults[2]));
+		sb.append(String.format("Method Name: %-15s\n", methodResults[METHOD_NAME]));
 
-		sb.append(String.format("Method Desc: %-15s\n", methodResults[3]));
+		sb.append(String.format("Method Desc: %-15s\n", methodResults[METHOD_DESC]));
 
-		sb.append(String.format("Num Instructions: %-15s\n", methodResults[4]));
+		sb.append(String.format("Num Instructions: %-15s\n", methodResults[NUM_INSTRUCTIONS]));
 
 
 		//split the binary string into an array of 1s and 0s representing the presence of nanopatterns
-		String[] binary = methodResults[5].split(" +");
+		String[] binary = methodResults[BINARY_RESULTS_STRING].split(" +");
 
 		//go through the binary array of nanopatterns
 		for (int i = 0; i < binary.length; i++)
@@ -903,12 +950,12 @@ public class PatternGUI extends JFrame implements ActionListener
 				{
 					String[] thisMethod = thisClass.get(j);
 					//print the method name description and number of instructions
-					sb.append("\n\t\t<method name = \""+ escapeChars(thisMethod[2]) + "\" desc = \""
-							+thisMethod[3] + "\" numinstr = \"" + thisMethod[4] + "\">");
+					sb.append("\n\t\t<method name = \""+ escapeChars(thisMethod[METHOD_NAME]) + "\" desc = \""
+							+thisMethod[METHOD_DESC] + "\" numinstr = \"" + thisMethod[NUM_INSTRUCTIONS] + "\">");
 
 					//print out the binary string of nanopatterns
 					//TODO alter so arrayList is used and can divide into types of pattern??
-					sb.append("\n\t\t\t"+thisMethod[5]);
+					sb.append("\n\t\t\t"+thisMethod[BINARY_RESULTS_STRING]);
 
 					sb.append("\n\t\t</method>");	
 				}

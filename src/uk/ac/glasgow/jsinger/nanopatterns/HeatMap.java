@@ -9,6 +9,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 
 import org.tc33.jheatchart.HeatChart;
 
@@ -26,7 +28,7 @@ public class HeatMap extends JFrame{
 		yAxis = classNames;
 	}
 
-	public JPanel displayHeatMap()
+	public JScrollPane displayHeatMap()
 	{
 
 		//0 is the low value, 1 is high.
@@ -35,7 +37,7 @@ public class HeatMap extends JFrame{
 
 		map.setXAxisLabel("pattern");
 		map.setYAxisLabel("class");
-		
+
 		//high and low value colours
 		map.setHighValueColour(Color.GREEN);
 		map.setLowValueColour(Color.WHITE);
@@ -56,16 +58,20 @@ public class HeatMap extends JFrame{
 		//ouptut to a JFrame
 		Image chart = map.getChartImage();
 
-		
+
 		JPanel panel = new JPanel();
-		
+
 		//chart is displayed as an ImageIcon of a JLabel
 		JLabel chartImage = new JLabel(new ImageIcon(chart));
 		panel.add(chartImage);		
-		
 
+		JScrollPane scrollPane = new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
+				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+		//set the default position of the bar to be to the right
+		scrollPane.getHorizontalScrollBar().setValue(100); 
 		
-		return panel;
+		return scrollPane;
 
 
 
