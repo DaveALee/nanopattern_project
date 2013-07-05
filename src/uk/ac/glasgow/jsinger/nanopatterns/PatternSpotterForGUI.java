@@ -1,7 +1,5 @@
 package src.uk.ac.glasgow.jsinger.nanopatterns;
 
-
-
 // TestPatternSpotter.java
 // Jeremy Singer
 // 10 Nov 08
