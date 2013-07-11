@@ -1,26 +1,35 @@
 package src.uk.ac.glasgow.jsinger.nanopatterns;
 
+import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
+
+import javax.swing.JTextArea;
 
 public class DatabaseAccess {
 
 	/** The order of elements in the array of results for each method */
 	private final int PACKAGE_NAME = 0, CLASS_NAME = 1, METHOD_NAME = 2, METHOD_DESC = 3,NUM_INSTRUCTIONS = 4, BINARY_RESULTS_STRING = 5; 
 
-	private final String CONNECTION = "jdbc:sqlite:nanopatterns.db";
+	/** Connection to the database. Appended with the file location of the database */
+	private  String connection = "jdbc:sqlite:";
+
+	/** Driver for connecting to the database */
 	private final String DRIVER = "org.sqlite.JDBC";
 
-	/** Default Constructor */
-	public DatabaseAccess(){}
+	/** Constructor */
+	public DatabaseAccess(File databaseLocation)
+	{
+		//append the locataion of the database to the connection string
+		connection += databaseLocation;
+		
+		//check whether the database table exists or whether it needs created
+		initDb();
+	}
 
 
-	/**
-	 * Forms a connection to the databse. Drops any existing table
-	 * and replaces it with an empty table containing columns for 
-	 * storing the results of each method.
-	 */
-	public void createTable()
+	/** Checks whether the database exists, if not creates the patterns table */
+	public void initDb()
 	{
 		Connection con = null;
 		Statement stmt = null;
@@ -28,7 +37,46 @@ public class DatabaseAccess {
 			//load database driver dynamically
 			//and  get connection
 			Class.forName(DRIVER);
-			con = DriverManager.getConnection(CONNECTION);
+			con = DriverManager.getConnection(connection);
+
+			con.setAutoCommit(false);
+
+			//create a statement to allow interatction with the database
+			stmt = con.createStatement();
+
+			String sql = "CREATE TABLE IF NOT EXISTS PATTERNS " + tableSQL();
+
+			stmt.executeUpdate(sql);
+			stmt.close();
+
+			//commit changes
+			con.commit();
+			con.close();
+
+		} 
+		catch ( Exception e ) {
+			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+			System.exit(0);
+		}
+	}
+
+
+
+
+	/**
+	 * Forms a connection to the databse. Drops any existing table
+	 * and replaces it with an empty table containing columns for 
+	 * storing the results of each method.
+	 */
+	public void resetTable()
+	{
+		Connection con = null;
+		Statement stmt = null;
+		try {
+			//load database driver dynamically
+			//and  get connection
+			Class.forName(DRIVER);
+			con = DriverManager.getConnection(connection);
 
 			con.setAutoCommit(false);
 
@@ -39,41 +87,7 @@ public class DatabaseAccess {
 
 			//SQL to drop then recreate the table
 			String sql = "DROP TABLE PATTERNS; " +
-					"CREATE TABLE PATTERNS " +
-					"(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
-					"PACKAGE_NAME	TEXT	NOT NULL," + 
-					"CLASS_NAME	TEXT	NOT NULL, " +
-					"METHOD_NAME	TEXT	NOT NULL, " +
-					"METHOD_DESC	TEXT	NOT NULL, " +
-					"NUM_INSTRUCTIONS	INT		NOT NULL," +
-					"NO_PARAMS	INT		NOT NULL," +
-					"VOID	INT		NOT NULL," +
-					"RECURSIVE	INT		NOT NULL," +
-					"SAME_NAME	INT		NOT NULL," +
-					"LEAF	INT		NOT NULL," +			
-					"OBJECT_CREATOR	INT		NOT NULL," +
-					"THIS_INSTANCE_FIELD_READER	INT		NOT NULL," +
-					"THIS_INSTANCE_FIELD_WRITER	INT		NOT NULL," +
-					"OTHER_INSTANCE_FIELD_READER	INT		NOT NULL," +
-					"OTHER_INSTANCE_FIELD_WRITER	INT		NOT NULL," +
-					"STATIC_FIELD_READER	INT		NOT NULL," +
-					"STATIC_FIELD_WRITER	INT		NOT NULL," +
-					"TYPE_MANIPULATOR	INT		NOT NULL," +
-					"STRAIGHT_LINE	INT		NOT NULL," +		
-					"LOOPER	INT		NOT NULL," +
-					"SWITCHER	INT		NOT NULL," +
-					"EXCEPTIONS	INT		NOT NULL," +
-					"LOCAL_READER	INT		NOT NULL," +
-					"LOCAL_WRITER	INT		NOT NULL,"+		
-					"ARRAY_CREATOR	INT		NOT NULL," +
-					"ARRAY_READER	INT		NOT NULL," +
-					"ARRAY_WRITER	INT		NOT NULL," +
-					"POLYMORPHIC	INT		NOT NULL," +
-					"SINGLE_RETURNER	INT		NOT NULL,"+
-					"MULTIPLE_RETURNER	INT		NOT NULL," +
-					"CLIENT	BOOLEAN		INT NULL," +
-					"JDK_CLIENT	INT		NOT NULL," +
-					"TAIL_CALLER	INT		NOT NULL);" ;   
+					"CREATE TABLE PATTERNS " + tableSQL();  
 
 			stmt.executeUpdate(sql);
 			stmt.close();
@@ -91,18 +105,62 @@ public class DatabaseAccess {
 		}
 	}
 
+
+/** 
+ * Method to produce a String used to create the database table
+ * 
+ * @return String containing the SQL commands to generate the table
+ */
+	public String tableSQL()
+	{
+		String table = "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+				"PACKAGE_NAME	TEXT	NOT NULL," + 
+				"CLASS_NAME	TEXT	NOT NULL, " +
+				"METHOD_NAME	TEXT	NOT NULL, " +
+				"METHOD_DESC	TEXT	NOT NULL, " +
+				"NUM_INSTRUCTIONS	INT		NOT NULL," +
+				"NO_PARAMS	INT		NOT NULL," +
+				"VOID	INT		NOT NULL," +
+				"RECURSIVE	INT		NOT NULL," +
+				"SAME_NAME	INT		NOT NULL," +
+				"LEAF	INT		NOT NULL," +			
+				"OBJECT_CREATOR	INT		NOT NULL," +
+				"THIS_INSTANCE_FIELD_READER	INT		NOT NULL," +
+				"THIS_INSTANCE_FIELD_WRITER	INT		NOT NULL," +
+				"OTHER_INSTANCE_FIELD_READER	INT		NOT NULL," +
+				"OTHER_INSTANCE_FIELD_WRITER	INT		NOT NULL," +
+				"STATIC_FIELD_READER	INT		NOT NULL," +
+				"STATIC_FIELD_WRITER	INT		NOT NULL," +
+				"TYPE_MANIPULATOR	INT		NOT NULL," +
+				"STRAIGHT_LINE	INT		NOT NULL," +		
+				"LOOPER	INT		NOT NULL," +
+				"SWITCHER	INT		NOT NULL," +
+				"EXCEPTIONS	INT		NOT NULL," +
+				"LOCAL_READER	INT		NOT NULL," +
+				"LOCAL_WRITER	INT		NOT NULL,"+		
+				"ARRAY_CREATOR	INT		NOT NULL," +
+				"ARRAY_READER	INT		NOT NULL," +
+				"ARRAY_WRITER	INT		NOT NULL," +
+				"POLYMORPHIC	INT		NOT NULL," +
+				"SINGLE_RETURNER	INT		NOT NULL,"+
+				"MULTIPLE_RETURNER	INT		NOT NULL," +
+				"CLIENT	BOOLEAN		INT NULL," +
+				"JDK_CLIENT	INT		NOT NULL," +
+				"TAIL_CALLER	INT		NOT NULL);" ;
+
+		return table;
+	}
+
+
 	/**
 	 * Adds new rows to the database table. Each row represents the results from the
 	 * nanopattern tool of one method.
 	 * 
 	 * @param data datastructure holding the results to be added to the database
 	 */
-	public void addNewRows(ArrayList<ArrayList<String[]>> data)
+	public void addNewRows(Model data)
 	{
 		System.out.println("Adding new Rows");
-
-		//a copy of the results of the analysis
-		ArrayList<ArrayList<String[]>>dataToAdd  = data;
 
 		Connection con = null;
 		Statement stmt = null;
@@ -112,16 +170,16 @@ public class DatabaseAccess {
 			//load database driver dynamically
 			//and  get connection
 			Class.forName(DRIVER);
-			con = DriverManager.getConnection(CONNECTION);
+			con = DriverManager.getConnection(connection);
 
 			stmt = con.createStatement();
 			con.setAutoCommit(false);
 
 			//for each class in the results
-			for(int i = 0; i < dataToAdd.size(); i++)
+			for(int i = 0; i < data.getNumClasses(); i++)
 			{
 				//make an arraylist to hold the current class
-				ArrayList<String[]> aClass = dataToAdd.get(i);
+				ArrayList<String[]> aClass = data.getClass(i);
 
 				//for the methods in the class
 				for (int j = 0; j < aClass.size(); j++)
@@ -172,68 +230,84 @@ public class DatabaseAccess {
 	 * Allows the database to be Queried and the results displayed to the user
 	 *
 	 */
-	public void queryDatabase()
+	public Model queryDatabase()
 	{
-		System.out.println("Querying Database");
-
 		Connection con = null;
 		Statement stmt = null;
+
+		//model to hold the results of the query
+		Model dbModel = new Model();
 
 		try
 		{
 			//load database driver dynamically
 			//and  get connection
 			Class.forName(DRIVER);
-			con = DriverManager.getConnection(CONNECTION);
-			
+			con = DriverManager.getConnection(connection);
+
 			stmt = con.createStatement();
 
-			//selects all the rows in the patterns table and prints out 
-			//the meta information and some of the patterns
+			//TODO enable different queries
 			ResultSet rs = stmt.executeQuery( "SELECT * FROM PATTERNS;" );
 			while ( rs.next() ) {
-				int id = rs.getInt("id");
-				String  apackage = rs.getString("package_name");
-				String  aclass = rs.getString("class_name");
-				String  amethod = rs.getString("method_name");
-				String  methodDesc = rs.getString("method_desc");
-				int numInstrs  = rs.getInt("num_instructions");
-				int tailCaller = rs.getInt("tail_caller");
-				int noParams = rs.getInt("no_params");
-				int isvoid = rs.getInt("void");
-				int isrecursive = rs.getInt("recursive");
-				int issamename = rs.getInt("same_name");
-				int isleaf = rs.getInt("leaf");
 
 
-				System.out.println( "ID = " + id );
-				System.out.println( "PACKAGE_NAME = " + apackage );
-				System.out.println( "CLASS_NAME = " + aclass );
-				System.out.println( "METHOD_NAME = " + amethod );
-				System.out.println( "METHOD_DESC = " + methodDesc );
-				System.out.println( "NUMBER_INSTRUCTIONS = " + numInstrs );
-				System.out.println( "TAIL_CALLER = " + tailCaller );
-				System.out.println( "NO_PARAMS = " + noParams );
-				System.out.println( "VOID = " + isvoid );
-				System.out.println( "RECURSIVE = " + isrecursive );
-				System.out.println( "SAME_NAME = " + issamename );
-				System.out.println( "LEAF = " + isleaf );
+				String[] methodResults = new String[6];
 
-				System.out.println();
+				methodResults[PACKAGE_NAME] = rs.getString("package_name");
+				methodResults[CLASS_NAME] = rs.getString("class_name");
+				methodResults[METHOD_NAME] = rs.getString("method_name");
+				methodResults[METHOD_DESC] = rs.getString("method_desc");
+				methodResults[NUM_INSTRUCTIONS] = "" + rs.getInt("num_instructions");
+
+				String binaryResults = "";
+				binaryResults += (rs.getInt("no_params")+ " ");
+				binaryResults += (rs.getInt("void")+" ");
+				binaryResults += (rs.getInt("recursive")+" ");
+				binaryResults += (rs.getInt("same_name")+" ");
+				binaryResults += (rs.getInt("leaf")+" ");
+				binaryResults += (rs.getInt("object_creator")+" ");
+				binaryResults += (rs.getInt("this_instance_field_reader")+" ");
+				binaryResults += (rs.getInt("this_instance_field_writer")+" ");
+				binaryResults += (rs.getInt("other_instance_field_reader")+" ");
+				binaryResults += (rs.getInt("other_instance_field_writer")+" ");
+				binaryResults += (rs.getInt("static_field_reader")+" ");
+				binaryResults += (rs.getInt("static_field_writer")+" ");
+				binaryResults += (rs.getInt("type_manipulator")+" ");
+				binaryResults += (rs.getInt("straight_line")+" ");
+				binaryResults += (rs.getInt("looper")+" ");	
+				binaryResults += (rs.getInt("switcher")+" ");
+				binaryResults += (rs.getInt("exceptions")+" ");
+				binaryResults += (rs.getInt("local_reader")+" ");
+				binaryResults += (rs.getInt("local_writer")+" ");
+				binaryResults += (rs.getInt("array_creator")+" ");
+				binaryResults += (rs.getInt("array_reader")+" ");
+				binaryResults += (rs.getInt("array_writer")+" ");
+				binaryResults += (rs.getInt("polymorphic")+" ");
+				binaryResults += (rs.getInt("single_returner")+" ");
+				binaryResults += (rs.getInt("multiple_returner")+" ");
+				binaryResults += (rs.getInt("client")+" ");
+				binaryResults += (rs.getInt("jdk_client")+" ");
+				binaryResults += (rs.getInt("tail_caller")+" ");
+
+				methodResults[BINARY_RESULTS_STRING] = binaryResults;
+
+				//add the method to the model
+				dbModel.addMethod(methodResults);
 			}
 
 			//close resources
 			rs.close();
 			stmt.close();
 			con.close();
-
-			System.out.println("End of database");
 		}
 		catch ( Exception e ) 
 		{
 			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 			System.exit(0);
 		}
+
+		return dbModel;	
 	}
 }
 

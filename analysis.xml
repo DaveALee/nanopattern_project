@@ -1,45 +1,34 @@
 <analysis>
-	<class name ="Foo">
-		<method name = "&lt;init&gt;" desc = "()V" numinstr = "3">
-			1 1 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 1 1 
+	<class name ="RefereeFrame">
+		<method name = "&lt;init&gt;" desc = "(LRefereeDetails;ILRefereeGUI;LRefereeList;)V" numinstr = "114">
+			0 1 0 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 1 
 		</method>
-		<method name = "f" desc = "(I)I" numinstr = "3">
-			0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 1 
+		<method name = "displayDetails" desc = "(LRefereeDetails;I)V" numinstr = "156">
+			0 1 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 1 0 
 		</method>
-		<method name = "g" desc = "()I" numinstr = "7">
-			1 0 1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 1 0 0 0 0 0 0 0 0 0 
+		<method name = "constructUneditableComponents" desc = "()V" numinstr = "100">
+			1 1 0 0 0 1 1 1 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 1 0 
 		</method>
-		<method name = "h" desc = "()V" numinstr = "4">
-			1 1 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 1 
+		<method name = "constructQualifications" desc = "(I)Ljavax/swing/JPanel;" numinstr = "67">
+			0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 1 0 
 		</method>
-		<method name = "h" desc = "(I)V" numinstr = "1">
-			0 1 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+		<method name = "constructArea" desc = "(I)Ljavax/swing/JPanel;" numinstr = "118">
+			0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 1 0 
 		</method>
-		<method name = "j" desc = "()V" numinstr = "16">
-			1 1 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 0 0 0 1 0 
+		<method name = "constructTravel" desc = "(I)Ljavax/swing/JPanel;" numinstr = "93">
+			0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 1 0 
 		</method>
-		<method name = "k" desc = "()V" numinstr = "7">
-			1 1 0 0 0 1 0 1 0 0 0 0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 1 0 
+		<method name = "actionPerformed" desc = "(Ljava/awt/event/ActionEvent;)V" numinstr = "73">
+			0 1 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1 1 
 		</method>
-		<method name = "l" desc = "()V" numinstr = "4">
-			1 1 0 0 1 0 1 0 0 0 0 0 0 1 0 0 0 1 1 0 0 0 0 0 0 0 0 0 
+		<method name = "validateInput" desc = "()Z" numinstr = "61">
+			1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 1 0 
 		</method>
-		<method name = "looper" desc = "()V" numinstr = "35">
-			1 1 0 0 0 1 1 0 1 1 1 0 0 0 1 0 0 1 1 0 0 0 0 0 0 0 1 0 
+		<method name = "formatLocation" desc = "()Ljava/lang/String;" numinstr = "18">
+			1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 1 
 		</method>
-	</class>
-	<class name ="testerClass">
-		<method name = "&lt;init&gt;" desc = "()V" numinstr = "3">
-			1 1 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 1 1 
-		</method>
-		<method name = "buildArray" desc = "()V" numinstr = "21">
-			1 1 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 1 1 1 0 1 0 0 0 0 0 0 
-		</method>
-		<method name = "fib" desc = "(I)I" numinstr = "19">
-			0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 
-		</method>
-		<method name = "calculate" desc = "(IILjava/lang/String;)I" numinstr = "4">
-			0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 
+		<method name = "formatTravel" desc = "()Ljava/lang/String;" numinstr = "85">
+			1 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 1 1 
 		</method>
 	</class>
 </analysis>

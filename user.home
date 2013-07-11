@@ -1,0 +1,102 @@
+default RefereeFrame
+================================================
+Method Name: <init>         
+Method Desc: (LRefereeDetails;ILRefereeGUI;LRefereeList;)V
+Num Instructions: 114            
+
+Calling Patterns: void samename 
+Object-Orientation Patterns: objCreator thisInstanceFieldReader thisInstanceFieldWriter 
+Control Flow Patterns: 
+Data Flow Patterns: localReader 
+Other Patterns: jdkClient tailCaller 
+---------------------------------------------------------------
+Method Name: displayDetails 
+Method Desc: (LRefereeDetails;I)V
+Num Instructions: 156            
+
+Calling Patterns: void 
+Object-Orientation Patterns: objCreator thisInstanceFieldReader thisInstanceFieldWriter 
+Control Flow Patterns: 
+Data Flow Patterns: localReader localWriter 
+Other Patterns: jdkClient 
+---------------------------------------------------------------
+Method Name: constructUneditableComponents
+Method Desc: ()V            
+Num Instructions: 100            
+
+Calling Patterns: noparams void 
+Object-Orientation Patterns: objCreator thisInstanceFieldReader thisInstanceFieldWriter 
+Control Flow Patterns: straightLine 
+Data Flow Patterns: localReader 
+Other Patterns: jdkClient 
+---------------------------------------------------------------
+Method Name: constructQualifications
+Method Desc: (I)Ljavax/swing/JPanel;
+Num Instructions: 67             
+
+Calling Patterns: 
+Object-Orientation Patterns: objCreator thisInstanceFieldReader thisInstanceFieldWriter 
+Control Flow Patterns: 
+Data Flow Patterns: localReader localWriter 
+Other Patterns: jdkClient 
+---------------------------------------------------------------
+Method Name: constructArea  
+Method Desc: (I)Ljavax/swing/JPanel;
+Num Instructions: 118            
+
+Calling Patterns: 
+Object-Orientation Patterns: objCreator thisInstanceFieldReader thisInstanceFieldWriter 
+Control Flow Patterns: 
+Data Flow Patterns: localReader localWriter 
+Other Patterns: jdkClient 
+---------------------------------------------------------------
+Method Name: constructTravel
+Method Desc: (I)Ljavax/swing/JPanel;
+Num Instructions: 93             
+
+Calling Patterns: 
+Object-Orientation Patterns: objCreator thisInstanceFieldReader thisInstanceFieldWriter 
+Control Flow Patterns: 
+Data Flow Patterns: localReader localWriter 
+Other Patterns: jdkClient 
+---------------------------------------------------------------
+Method Name: actionPerformed
+Method Desc: (Ljava/awt/event/ActionEvent;)V
+Num Instructions: 73             
+
+Calling Patterns: void 
+Object-Orientation Patterns: thisInstanceFieldReader typeManipulator 
+Control Flow Patterns: 
+Data Flow Patterns: localReader 
+Other Patterns: jdkClient tailCaller 
+---------------------------------------------------------------
+Method Name: validateInput  
+Method Desc: ()Z            
+Num Instructions: 61             
+
+Calling Patterns: noparams 
+Object-Orientation Patterns: thisInstanceFieldReader 
+Control Flow Patterns: 
+Data Flow Patterns: localReader localWriter 
+Other Patterns: jdkClient 
+---------------------------------------------------------------
+Method Name: formatLocation 
+Method Desc: ()Ljava/lang/String;
+Num Instructions: 18             
+
+Calling Patterns: noparams 
+Object-Orientation Patterns: thisInstanceFieldReader 
+Control Flow Patterns: 
+Data Flow Patterns: localReader 
+Other Patterns: jdkClient tailCaller 
+---------------------------------------------------------------
+Method Name: formatTravel   
+Method Desc: ()Ljava/lang/String;
+Num Instructions: 85             
+
+Calling Patterns: noparams 
+Object-Orientation Patterns: objCreator thisInstanceFieldReader 
+Control Flow Patterns: 
+Data Flow Patterns: localReader localWriter 
+Other Patterns: jdkClient tailCaller 
+---------------------------------------------------------------
