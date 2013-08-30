@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>File Upload</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+    <body>
+        <form method="POST" action="upload" enctype="multipart/form-data" >
+            File:
+            <input type="file" name="file" id="file" multiple/> <br/>
+ 			<input type="file" name="file" id="file" multiple/> <br/>
+ 			<input type="file" name="file" id="file" multiple/> <br/>
+                       <br/>
+                       
+            Analysis Level:           
+            <input type="radio" name="level" value="package">Package</input>
+			<input type="radio" name="level" value="class" checked>Class</input> 
+			<input type="radio" name="level" value="method">Method</input> 
+			
+            <input type="submit" value="Upload" name="uploader" id="uploader" />
+        </form>
+    </body>
+</html>
